@@ -8,7 +8,8 @@ const instance = axios.create({
 });
 
 const getStockPrice = async (corpname: string) => {
-    return JSON.parse(await instance.get(`/stock/${corpname}`));
+    const res = await instance.get(`/stock/${corpname}`);
+    return (res.data as any).currentStockPrice;
 }
 
 export = {getStockPrice};

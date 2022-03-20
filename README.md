@@ -6,6 +6,12 @@
 
 ### Запуск
 
+Соберите образ веб-сервера с эмулятором биржи:
+
+```
+docker build -t exchange-emulator .
+```
+
 ```
 npm install
 npm test

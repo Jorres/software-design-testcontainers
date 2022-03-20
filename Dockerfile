@@ -12,4 +12,4 @@ RUN npm run build
 
 EXPOSE 30001
 
-CMD node /usr/src/app/src/exchange/exchange.js
+CMD node /usr/src/app/dist/exchange/exchange.js

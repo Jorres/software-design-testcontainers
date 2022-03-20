@@ -4,9 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node dist/exchange.js",
+    "start_ex": "npm run build && node ./dist/exchange/exchange.js",
+    "start_ac": "npm run build && node ./dist/account/entrypoint.js",
     "build": "tsc",
-    "test": "jest --forceExit"
+    "test": "jest --forceExit --runInBand"
   },
   "keywords": [],
   "author": "",

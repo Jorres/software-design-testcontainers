@@ -46,14 +46,34 @@ export class Accounts {
     getUserStocks = async (id: number) => {
         const user = this.users.find((user) => user.id == id);
         if (user) {
-            const stocksData = user.stocksOwned.map(async (stock) => ({
+            const stocksData = await Promise.all (user.stocksOwned.map(async (stock) => ({
                 ...stock,
                 stockPrice: await client.getStockPrice(stock.corpname),
-            }));
+            })));
             return [200, stocksData];
         } else {
             return [404, null];
         }
+    };
+
+    getBalance = async (id: number) => {
+        const user = this.users.find((user) => user.id == id);
+        if (!user) {
+            return [404, null];
+        }
+
+        let totalStocksValue = (
+            await Promise.all(
+                user.stocksOwned.map(async (stock) => {
+                    return (
+                        (await client.getStockPrice(stock.corpname)) *
+                        stock.quantity
+                    );
+                })
+            )
+        ).reduce((a, b) => a + b, 0);
+
+        return [200, totalStocksValue + user.balance];
     };
 
     makeTransaction = async (
@@ -70,24 +90,33 @@ export class Accounts {
         let userStocksOnRequest = user.stocksOwned.filter(
             (stock) => stock.corpname == corpname
         );
-        if (!userStocksOnRequest) {
-            return 404;
+
+        let currentStockInfo: Stock | null = null;
+
+        if (userStocksOnRequest.length == 0) {
+            let newStockRecord: Stock = {
+                corpname,
+                quantity: 0,
+            };
+            user.stocksOwned.push(newStockRecord);
+            currentStockInfo = newStockRecord;
+        } else {
+            currentStockInfo = userStocksOnRequest[0];
         }
 
-        let singleStockInfo = userStocksOnRequest[0];
-        if (singleStockInfo.quantity + quantity >= 0) {
+        if (currentStockInfo.quantity + quantity < 0) {
             return 400;
         }
 
         const transactionCost =
             (await client.getStockPrice(corpname)) * quantity;
 
-        if (user.balance - transactionCost >= 0) {
+        if (user.balance - transactionCost < 0) {
             return 400;
         }
 
         user.balance -= transactionCost;
-        singleStockInfo.quantity += quantity;
+        currentStockInfo.quantity += quantity;
 
         return 200;
     };
